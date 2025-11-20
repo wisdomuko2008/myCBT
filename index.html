@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Smart CBT System</title>
+
+  <!-- =========================
+       GOOGLE FONTS
+  ========================== -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- =========================
+       BASIC CSS
+  ========================== -->
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: #f3f5f9;
+      padding: 20px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .show {
+      display: block;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 500px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #aaa;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 17px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0056c4;
+    }
+
+    .option {
+      padding: 12px;
+      margin: 8px 0;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .option:hover {
+      background: #e0dede;
+    }
+
+    #loginError {
+      color: red;
+      margin-top: 5px;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    #submitBtn {
+      background: #28a745;
+    }
+
+    #submitBtn:hover {
+      background: #1e7f33;
+    }
+  </style>
+
+  <!-- =========================
+       FIREBASE SDK IMPORT
+  ========================== -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getStorage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+    // ================================
+    // 🔥 YOUR FIREBASE CONFIG HERE
+    // ================================
+const firebaseConfig = {
+  apiKey: "AIzaSyCpndu7WVF91FypHqnslbhgJsWOSQsCocQ",
+  authDomain: "cacexam-cc040.firebaseapp.com",
+  projectId: "cacexam-cc040",
+  storageBucket: "cacexam-cc040.appspot.com",
+  messagingSenderId: "295980156642",
+  appId: "1:295980156642:web:febd8335d5dc37eb7bc0bb",
+  measurementId: "G-KHV0KZF1J7"
+};
+
+    // Initialize Firebase
+    export const app = initializeApp(firebaseConfig);
+    export const db = getFirestore(app);
+    export const storage = getStorage(app);
+  </script>
+</head>
+
+<body>
+
+  <!-- =====================================
+       LOGIN PAGE
+  ====================================== -->
+  <div id="loginPage" class="page show">
+    <div class="container">
+      <h2>Student Login</h2>
+
+      <input id="phoneInput" type="text" placeholder="Enter phone number">
+
+      <div id="loginError"></div>
+
+      <button onclick="login()">Login</button>
+    </div>
+  </div>
+
+  <!-- =====================================
+       INFO PAGE
+  ====================================== -->
+  <div id="infoPage" class="page">
+    <div class="container">
+      <h2>Welcome</h2>
+
+      <p id="studentInfo"></p>
+
+      <button onclick="beginExam()">Start Exam</button>
+    </div>
+  </div>
+
+  <!-- =====================================
+       EXAM PAGE
+  ====================================== -->
+  <div id="examPage" class="page">
+    <div class="container">
+      <h2 id="qText">Question text...</h2>
+
+      <div id="optA" class="option" onclick="choose('A')"></div>
+      <div id="optB" class="option" onclick="choose('B')"></div>
+      <div id="optC" class="option" onclick="choose('C')"></div>
+      <div id="optD" class="option" onclick="choose('D')"></div>
+
+      <button onclick="nextQ()">Next</button>
+    </div>
+  </div>
+
+  <!-- =====================================
+       FINISH PAGE
+  ====================================== -->
+  <div id="finishPage" class="page">
+    <div class="container">
+      <h2>Exam Submitted</h2>
+      <p>Your score will be available soon.</p>
+    </div>
+  </div>
+
+  <!-- SCRIPTS WILL BE LOADED IN CHUNK 4 -->
+  <script>
+    // ==========================================
+// STUDENTS DATABASE (15 Students)
+// ==========================================
+const students = [
+    { phone:"1111", name:"John Ade", class:"JSS2", img:"" },
+{ phone:"2222", name:"Mary Paul", class:"JSS2", img:"" },
+{ phone:"3333", name:"Kingsley Tom", class:"JSS2", img:"" },
+{ phone:"4444", name:"Favour Joe", class:"JSS2", img:"" },
+{ phone:"5555", name:"Blessing Ada", class:"JSS2", img:"" },
+{ phone:"6666", name:"Samuel Obi", class:"JSS2", img:"" },
+{ phone:"7777", name:"Chidera Ray", class:"JSS2", img:"" },
+{ phone:"8888", name:"Joy Philip", class:"JSS2", img:"" },
+{ phone:"9999", name:"Daniel Mark", class:"JSS2", img:"" },
+{ phone:"1010", name:"Peace Jude", class:"JSS2", img:"" },
+{ phone:"1212", name:"Abel Tony", class:"JSS2", img:"" },
+{ phone:"1313", name:"Queen Nkem", class:"JSS2", img:"" },
+{ phone:"1414", name:"Uche Chima", class:"JSS2", img:"" },
+{ phone:"1515", name:"Gift Seun", class:"JSS2", img:"" },
+{ phone:"1616", name:"Elijah Moses", class:"JSS2", img:"" }
+];
+
+
+// ==========================================
+// QUESTION BANK — 60 Questions
+// 20 Mathematics + 20 Basic Science + 20 Basic Tech
+// ==========================================
+
+const questions = [
+
+  // =======================
+  // 🔢 MATHEMATICS (20)
+  // =======================
+  {
+    question: "What is 12 × 8?",
+    optA: "96", optB: "48", optC: "84", optD: "108",
+    correct: "A"
+  },
+  {
+    question: "Find the value of 144 ÷ 12.",
+    optA: "10", optB: "12", optC: "14", optD: "16",
+    correct: "A"
+  },
+  {
+    question: "Which is the smallest number?",
+    optA: "0.4", optB: "0.04", optC: "0.44", optD: "4.0",
+    correct: "B"
+  },
+  {
+    question: "What is the place value of 7 in 3,478?",
+    optA: "7", optB: "70", optC: "700", optD: "7000",
+    correct: "C"
+  },
+  {
+    question: "Simplify: 3² + 4²",
+    optA: "7", optB: "25", optC: "5", optD: "12",
+    correct: "B"
+  },
+  {
+    question: "Convert 2/5 to decimal.",
+    optA: "0.25", optB: "0.20", optC: "0.40", optD: "0.50",
+    correct: "C"
+  },
+  {
+    question: "Find the perimeter of a square with side 9cm.",
+    optA: "36cm", optB: "18cm", optC: "27cm", optD: "45cm",
+    correct: "A"
+  },
+  {
+    question: "What is the LCM of 4 and 6?",
+    optA: "6", optB: "8", optC: "12", optD: "24",
+    correct: "C"
+  },
+  {
+    question: "Find √81.",
+    optA: "9", optB: "8", optC: "7", optD: "6",
+    correct: "A"
+  },
+  {
+    question: "Calculate 25% of 200.",
+    optA: "25", optB: "50", optC: "75", optD: "100",
+    correct: "B"
+  },
+  {
+    question: "Express 0.75 as a fraction.",
+    optA: "3/4", optB: "1/2", optC: "2/5", optD: "1/5",
+    correct: "A"
+  },
+  {
+    question: "Find 7/8 + 1/8.",
+    optA: "1", optB: "7/8", optC: "8/8", optD: "9/8",
+    correct: "C"
+  },
+  {
+    question: "What is 15% as a decimal?",
+    optA: "0.15", optB: "1.5", optC: "0.015", optD: "15.0",
+    correct: "A"
+  },
+  {
+    question: "Simplify: 48 ÷ 6 ÷ 2",
+    optA: "4", optB: "6", optC: "8", optD: "16",
+    correct: "A"
+  },
+  {
+    question: "What is 0.6 × 0.5?",
+    optA: "0.30", optB: "0.3", optC: "0.05", optD: "3",
+    correct: "B"
+  },
+  {
+    question: "Add: 4⅓ + 2⅔",
+    optA: "6", optB: "7", optC: "8", optD: "9",
+    correct: "A"
+  },
+  {
+    question: "The mode of 3, 5, 5, 7, 8 is?",
+    optA: "3", optB: "5", optC: "7", optD: "8",
+    correct: "B"
+  },
+  {
+    question: "Convert 2.5m to cm.",
+    optA: "250cm", optB: "25cm", optC: "2500cm", optD: "205cm",
+    correct: "A"
+  },
+  {
+    question: "What is 9 × 7?",
+    optA: "56", optB: "63", optC: "72", optD: "49",
+    correct: "B"
+  },
+  {
+    question: "Which angle is greater than 90°?",
+    optA: "Acute", optB: "Obtuse", optC: "Right", optD: "Straight",
+    correct: "B"
+  },
+
+  // ===========================
+  // 🔬 BASIC SCIENCE (20)
+  // ===========================
+  {
+    question: "Which of these is a source of energy?",
+    optA: "Stone", optB: "Sun", optC: "Paper", optD: "Water vapor",
+    correct: "B"
+  },
+  {
+    question: "Plants make their food through?",
+    optA: "Digestion", optB: "Photosynthesis", optC: "Breathing", optD: "Evaporation",
+    correct: "B"
+  },
+  {
+    question: "Which organ pumps blood?",
+    optA: "Lungs", optB: "Heart", optC: "Kidney", optD: "Liver",
+    correct: "B"
+  },
+  {
+    question: "Humans breathe in?",
+    optA: "Carbon dioxide", optB: "Water", optC: "Oxygen", optD: "Smoke",
+    correct: "C"
+  },
+  {
+    question: "Which of these is NOT a sense organ?",
+    optA: "Skin", optB: "Eye", optC: "Ear", optD: "Bone",
+    correct: "D"
+  },
+  {
+    question: "The hardest natural substance is?",
+    optA: "Steel", optB: "Diamond", optC: "Gold", optD: "Iron",
+    correct: "B"
+  },
+  {
+    question: "The boiling point of water is?",
+    optA: "50°C", optB: "70°C", optC: "90°C", optD: "100°C",
+    correct: "D"
+  },
+  {
+    question: "Living things need food to?",
+    optA: "Play", optB: "Grow", optC: "Sleep", optD: "Cry",
+    correct: "B"
+  },
+  {
+    question: "The basic unit of life is?",
+    optA: "Cell", optB: "Atom", optC: "Tissue", optD: "Organ",
+    correct: "A"
+  },
+  {
+    question: "Which gas do plants release?",
+    optA: "CO₂", optB: "O₂", optC: "N₂", optD: "Smoke",
+    correct: "B"
+  },
+  {
+    question: "The process of water turning to vapor is?",
+    optA: "Melting", optB: "Evaporation", optC: "Freezing", optD: "Boiling",
+    correct: "B"
+  },
+  {
+    question: "Which one is a vertebrate?",
+    optA: "Ant", optB: "Frog", optC: "Earthworm", optD: "Snail",
+    correct: "B"
+  },
+  {
+    question: "Plants absorb water through?",
+    optA: "Leaf", optB: "Root", optC: "Stem", optD: "Seed",
+    correct: "B"
+  },
+  {
+    question: "The largest planet is?",
+    optA: "Mars", optB: "Earth", optC: "Jupiter", optD: "Venus",
+    correct: "C"
+  },
+  {
+    question: "Which is renewable?",
+    optA: "Coal", optB: "Petrol", optC: "Wind", optD: "Gas",
+    correct: "C"
+  },
+  {
+    question: "The part of plant that makes food?",
+    optA: "Root", optB: "Leaf", optC: "Stem", optD: "Flower",
+    correct: "B"
+  },
+  {
+    question: "Matter exists in how many states?",
+    optA: "2", optB: "3", optC: "4", optD: "5",
+    correct: "B"
+  },
+  {
+    question: "Which is NOT a planet?",
+    optA: "Mercury", optB: "Neptune", optC: "Pluto", optD: "Saturn",
+    correct: "C"
+  },
+  {
+    question: "Animals that live on land are?",
+    optA: "Aquatic", optB: "Aerial", optC: "Amphibians", optD: "Terrestrial",
+    correct: "D"
+  },
+  {
+    question: "The sun is a?",
+    optA: "Planet", optB: "Star", optC: "Comet", optD: "Rock",
+    correct: "B"
+  },
+
+  // ===========================
+  // 🛠 BASIC TECHNOLOGY (20)
+  // ===========================
+  {
+    question: "Which tool is used for cutting wood?",
+    optA: "Hammer", optB: "Saw", optC: "File", optD: "Spanner",
+    correct: "B"
+  },
+  {
+    question: "A triangle has how many sides?",
+    optA: "2", optB: "3", optC: "4", optD: "5",
+    correct: "B"
+  },
+  {
+    question: "Which one is a simple machine?",
+    optA: "Lever", optB: "Car", optC: "Aeroplane", optD: "Bulb",
+    correct: "A"
+  },
+  {
+    question: "Which material is a good conductor?",
+    optA: "Plastic", optB: "Rubber", optC: "Wood", optD: "Copper",
+    correct: "D"
+  },
+  {
+    question: "Which of these is a safety device?",
+    optA: "Helmet", optB: "Ball", optC: "Pencil", optD: "Cup",
+    correct: "A"
+  },
+  {
+    question: "A drawing showing an object is called?",
+    optA: "Sketch", optB: "Map", optC: "Graph", optD: "List",
+    correct: "A"
+  },
+  {
+    question: "Which is an electronic device?",
+    optA: "Radio", optB: "Chair", optC: "Cupboard", optD: "Broom",
+    correct: "A"
+  },
+  {
+    question: "Nails are made of?",
+    optA: "Rubber", optB: "Plastic", optC: "Metal", optD: "Paper",
+    correct: "C"
+  },
+  {
+    question: "Which tool drives nails?",
+    optA: "Pliers", optB: "File", optC: "Hammer", optD: "Saw",
+    correct: "C"
+  },
+  {
+    question: "A wheelbarrow is a?",
+    optA: "Lever", optB: "Pulley", optC: "Screw", optD: "Wedge",
+    correct: "A"
+  },
+  {
+    question: "What is used to tighten bolts?",
+    optA: "Hammer", optB: "Spanner", optC: "Saw", optD: "File",
+    correct: "B"
+  },
+  {
+    question: "Which shape has 4 equal sides?",
+    optA: "Triangle", optB: "Square", optC: "Rectangle", optD: "Oval",
+    correct: "B"
+  },
+  {
+    question: "Electricity flows through?",
+    optA: "Insulator", optB: "Conductor", optC: "Plastic", optD: "Glass",
+    correct: "B"
+  },
+  {
+    question: "Which one is an input device?",
+    optA: "Keyboard", optB: "Speaker", optC: "Monitor", optD: "Printer",
+    correct: "A"
+  },
+  {
+    question: "Which drawing instrument draws circles?",
+    optA: "Ruler", optB: "Compass", optC: "Set square", optD: "Protractor",
+    correct: "B"
+  },
+  {
+    question: "The part of a computer that stores data is?",
+    optA: "Monitor", optB: "Mouse", optC: "Keyboard", optD: "Memory",
+    correct: "D"
+  },
+  {
+    question: "A device that gives output is?",
+    optA: "Scanner", optB: "Speaker", optC: "Keyboard", optD: "Mouse",
+    correct: "B"
+  },
+  {
+    question: "The blunt edge of a knife is called?",
+    optA: "Back", optB: "Tip", optC: "Face", optD: "Handle",
+    correct: "A"
+  },
+  {
+    question: "Computers process data into?",
+    optA: "Heat", optB: "Information", optC: "Sound", optD: "Images only",
+    correct: "B"
+  },
+  {
+    question: "The person who repairs electrical faults is?",
+    optA: "Carpenter", optB: "Electrician", optC: "Mechanic", optD: "Mason",
+    correct: "B"
+  }
+
+]
+/* ===========================================
+   GLOBAL STORAGE (fixes lexical binding issues)
+=========================================== */
+const EXAM = {
+  currentStudent: null,
+  currentQuestionIndex: 0,
+  score: 0,
+  timerInterval: null,
+  duration: 30 * 60,   // 30 minutes
+  stream: null,
+  answers: {}
+};
+
+/* ===========================================
+   WEBCAM PROCTORING
+=========================================== */
+async function startWebcam() {
+  try {
+    EXAM.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const video = document.getElementById("examWebcam");
+    video.srcObject = EXAM.stream;
+  } catch (e) {
+    alert("Webcam access is required to continue the exam.");
+  }
+}
+
+/* ===========================================
+   ANTI-CHEAT LOGGING
+=========================================== */
+async function logCheat(action) {
+  if (!EXAM.currentStudent) return;
+
+  await addDoc(collection(db, "cheatLogs"), {
+    student: EXAM.currentStudent.name,
+    phone: EXAM.currentStudent.phone,
+    action,
+    at: new Date().toISOString()
+  });
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) logCheat("TAB SWITCH");
+});
+
+window.onblur = () => logCheat("WINDOW BLUR");
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("copy", e => { e.preventDefault(); logCheat("COPY"); });
+document.addEventListener("paste", e => { e.preventDefault(); logCheat("PASTE"); });
+
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey || e.metaKey || e.key === "F12") {
+    e.preventDefault();
+    logCheat("FORBIDDEN KEY");
+  }
+});
+
+/* ===========================================
+   NAVIGATION
+=========================================== */
+function showQuestion() {
+  const q = questions[EXAM.currentQuestionIndex];
+
+  document.getElementById("questionText").innerText = q.question;
+  document.getElementById("optA").innerText = q.a;
+  document.getElementById("optB").innerText = q.b;
+  document.getElementById("optC").innerText = q.c;
+  document.getElementById("optD").innerText = q.d;
+}
+
+function nextQuestion() {
+  saveAnswer();
+  if (EXAM.currentQuestionIndex < questions.length - 1) {
+    EXAM.currentQuestionIndex++;
+    showQuestion();
+  }
+}
+
+function prevQuestion() {
+  saveAnswer();
+  if (EXAM.currentQuestionIndex > 0) {
+    EXAM.currentQuestionIndex--;
+    showQuestion();
+  }
+}
+
+/* ===========================================
+   TIMER (auto submit)
+=========================================== */
+function startTimer() {
+  EXAM.timerInterval = setInterval(() => {
+    EXAM.duration--;
+
+    const m = Math.floor(EXAM.duration / 60);
+    const s = EXAM.duration % 60;
+
+    document.getElementById("timerBox").innerText =
+      `${m}m : ${s < 10 ? "0" + s : s}s`;
+
+    if (EXAM.duration <= 0) {
+      clearInterval(EXAM.timerInterval);
+      submitExam();
+    }
+  }, 1000);
+}
+
+/* ===========================================
+   SAVE ANSWERS
+=========================================== */
+function saveAnswer() {
+  const picked = document.querySelector('input[name="ans"]:checked');
+  if (picked) {
+    EXAM.answers[EXAM.currentQuestionIndex] = picked.value;
+  }
+}
+
+/* ===========================================
+   SUBMIT EXAM
+=========================================== */
+async function submitExam() {
+  clearInterval(EXAM.timerInterval);
+  saveAnswer();
+
+  EXAM.score = 0;
+  questions.forEach((q, i) => {
+    if (EXAM.answers[i] === q.correct) EXAM.score++;
+  });
+
+  await addDoc(collection(db, "examResults"), {
+    name: EXAM.currentStudent.name,
+    phone: EXAM.currentStudent.phone,
+    class: EXAM.currentStudent.class,
+    score: EXAM.score,
+    total: questions.length,
+    answers: EXAM.answers,
+    time: new Date().toISOString()
+  });
+
+  if (EXAM.stream) EXAM.stream.getTracks().forEach(t => t.stop());
+
+  alert("Exam submitted!");
+  document.getElementById("examPage").classList.add("hidden");
+  document.getElementById("resultPage").classList.remove("hidden");
+  document.getElementById("resultScore").innerText =
+    `${EXAM.score}/${questions.length}`;
+}
+
+/* ===========================================
+   LOGIN
+=========================================== */
+function login() {
+  const phone = document.getElementById("phoneInput").value.trim();
+  const match = students.find(s => s.phone === phone);
+
+  if (!match) return alert("Phone not registered.");
+
+  EXAM.currentStudent = match;
+
+  document.getElementById("loginPage").classList.add("hidden");
+  document.getElementById("examPage").classList.remove("hidden");
+
+  startWebcam();
+  startTimer();
+  showQuestion();
+}
+
+/* expose for HTML buttons */
+window.login = login;
+window.nextQuestion = nextQuestion;
+window.prevQuestion = prevQuestion;
+window.submitExam = submitExam;
+
+</script>
+</body>
+</html>
