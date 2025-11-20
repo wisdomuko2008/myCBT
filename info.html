@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAC Exam - Candidate Info</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f7f7f7;
+  }
+
+  header {
+    background: #7B0323;
+    color: white;
+    padding: 18px;
+    text-align: center;
+    font-size: 23px;
+    font-weight: bold;
+  }
+
+  .card {
+    background: white;
+    width: 90%;
+    max-width: 380px;
+    margin: 25px auto;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+    text-align: center;
+  }
+
+  .card img {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    border: 3px solid #7B0323;
+    object-fit: cover;
+  }
+
+  .label {
+    color: #555;
+    font-size: 15px;
+    margin-top: 10px;
+  }
+
+  .value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #222;
+  }
+
+  .instructions {
+    background: #fff;
+    width: 90%;
+    max-width: 380px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.15);
+  }
+
+  .instructions h3 {
+    text-align: center;
+    color: #7B0323;
+    margin-bottom: 12px;
+  }
+
+  .instructions ul {
+    padding-left: 18px;
+    line-height: 1.5;
+    font-size: 15px;
+  }
+
+  button {
+    width: 90%;
+    padding: 12px;
+    background: #7B0323;
+    color: white;
+    border: none;
+    font-size: 17px;
+    font-weight: bold;
+    border-radius: 6px;
+    margin: 25px auto;
+    display: block;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #5A021A;
+  }
+
+  footer {
+    margin-top: 20px;
+    text-align: center;
+    color: #555;
+    font-size: 14px;
+    padding-bottom: 20px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>CAC Revision Exam</header>
+
+<div class="card">
+
+  <img id="studImg" src="" alt="Student Photo">
+
+  <div class="label">STUDENT NAME</div>
+  <div id="studName" class="value"></div>
+
+  <div class="label">CLASS</div>
+  <div id="studClass" class="value"></div>
+
+  <div class="label">PHONE NUMBER</div>
+  <div id="studPhone" class="value"></div>
+
+</div>
+
+<div class="instructions">
+  <h3>EXAM INSTRUCTIONS</h3>
+  <ul>
+    <li>You are required to stay in one place during the exam.</li>
+    <li>Ensure your camera remains ON and visible.</li>
+    <li>Do not refresh or close the page while writing.</li>
+    <li>Do not receive calls or switch apps/windows.</li>
+    <li>Each question carries equal marks.</li>
+    <li>Once you start the exam, your time begins immediately.</li>
+    <li>Your result will be sent automatically after submission.</li>
+  </ul>
+</div>
+
+<button onclick="goNext()">Proceed to Instructions</button>
+
+<footer>All Rights Reserved</footer>
+
+<script>
+// =============================
+// GET URL PARAMETERS
+// =============================
+const params = new URLSearchParams(window.location.search);
+
+document.getElementById("studName").innerText = params.get("name") || "";
+document.getElementById("studClass").innerText = params.get("class") || "";
+document.getElementById("studPhone").innerText = params.get("phone") || "";
+document.getElementById("studImg").src = params.get("img") || "";
+
+// If empty, use placeholder
+if (!params.get("img")) {
+  document.getElementById("studImg").src =
+    "https://via.placeholder.com/140?text=Student";
+}
+
+// =============================
+// MOVE TO PAGE 3
+// =============================
+function goNext() {
+  const nextUrl =
+    `note.html?name=${encodeURIComponent(params.get("name"))}` +
+    `&class=${encodeURIComponent(params.get("class"))}` +
+    `&phone=${encodeURIComponent(params.get("phone"))}` +
+    `&img=${encodeURIComponent(params.get("img"))}`;
+
+  window.location.href = nextUrl;
+}
+</script>
+
+</body>
+</html>

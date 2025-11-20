@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAC Revision Exam – Completed</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background: #fdfdfd;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #6a0000;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#card {
+    width: 92%;
+    max-width: 420px;
+    margin: 40px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+#studentImg {
+    width: 130px;
+    height: 130px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid #6a0000;
+    margin-bottom: 15px;
+}
+
+h2 {
+    color: #6a0000;
+    margin-bottom: 5px;
+}
+
+#message {
+    margin-top: 15px;
+    background: #fff7f7;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #6a0000;
+    font-size: 15px;
+}
+
+/* Floating WhatsApp Button */
+#whatsappBtn {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    width: 60px;
+    height: 60px;
+    background: #25D366;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+    text-decoration: none;
+}
+
+#waIcon {
+    width: 35px;
+    height: 35px;
+}
+}
+</style>
+</head>
+
+<body>
+
+<header>EXAM SUBMITTED</header>
+
+<div id="card">
+    <img id="studentImg" src="" alt="Student">
+    <h2 id="studentName">Student Name</h2>
+    <p id="studentClass"></p>
+    <h3 id="scoreText"></h3>
+
+    <div id="message">
+        Your test has been successfully submitted.<br><br>
+        Kindly wait for <b>24 hours</b> for your result to be delivered to you at:<br>
+        <b>(website placeholder)</b><br><br>
+        For any complaints, tap the WhatsApp button below.
+    </div>
+</div>
+
+<!-- WhatsApp Floating Button -->
+<a id="whatsappBtn" href="https://wa.me/2349034159839" target="_blank">
+    <img id="waIcon" src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" />
+</a>
+
+<script>
+// =============================================
+// Read data from exam.html URL parameters
+// =============================================
+const params = new URLSearchParams(window.location.search);
+
+const name = params.get("name") || "Unknown Student";
+const cls = params.get("class") || "Unknown Class";
+const score = params.get("score") || "0";
+const total = params.get("total") || "0";
+const img = params.get("img") || "";
+
+// Assign to UI
+document.getElementById("studentName").innerText = name;
+document.getElementById("studentClass").innerText = "Class: " + cls;
+document.getElementById("scoreText").innerText = "Score: " + score + " / " + total;
+document.getElementById("studentImg").src = img || "https://via.placeholder.com/130";
+</script>
+
+</body>
+</html>

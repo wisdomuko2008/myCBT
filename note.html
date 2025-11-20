@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAC Revision Exam - Guidelines</title>
+
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f4f4;
+  }
+
+  header {
+    background: #7B0323;
+    color: white;
+    padding: 18px;
+    text-align: center;
+    font-size: 23px;
+    font-weight: bold;
+  }
+
+  .container {
+    width: 92%;
+    max-width: 420px;
+    margin: 20px auto;
+  }
+
+  .info-box, .note-box {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0px 0px 12px rgba(0,0,0,0.15);
+  }
+
+  .title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #7B0323;
+    margin-bottom: 12px;
+  }
+
+  .row {
+    margin-bottom: 10px;
+  }
+
+  .label {
+    color: #555;
+    font-size: 14px;
+  }
+
+  .value {
+    font-size: 16px;
+    font-weight: bold;
+    color: #222;
+  }
+
+  video {
+    width: 100%;
+    margin-top: 12px;
+    border-radius: 12px;
+    background: #000;
+  }
+
+  button {
+    width: 100%;
+    padding: 12px;
+    background: #7B0323;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 17px;
+    font-weight: bold;
+    margin-top: 18px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #5A021A;
+  }
+
+  footer {
+    margin-top: 30px;
+    text-align: center;
+    padding-bottom: 20px;
+    color: #555;
+    font-size: 14px;
+  }
+</style>
+</head>
+
+<body>
+
+<header>CAC Revision Exam</header>
+
+<div class="container">
+
+  <!-- Student Info -->
+  <div class="info-box">
+    <div class="title">Candidate Information</div>
+
+    <div class="row">
+      <div class="label">Name</div>
+      <div id="studName" class="value"></div>
+    </div>
+
+    <div class="row">
+      <div class="label">Class</div>
+      <div id="studClass" class="value"></div>
+    </div>
+
+    <div class="row">
+      <div class="label">Phone Number</div>
+      <div id="studPhone" class="value"></div>
+    </div>
+
+    <video id="cam" autoplay playsinline></video>
+  </div>
+
+  <!-- Exam Guidelines -->
+  <div class="note-box">
+    <div class="title">Before You Begin</div>
+    <ul style="padding-left:20px; line-height:1.5;">
+      <li>Ensure your face is clearly visible in the camera.</li>
+      <li>Do not refresh or close the exam after starting.</li>
+      <li>Do not switch apps until you finish.</li>
+      <li>Good network connection is required.</li>
+      <li>The exam will auto-submit when time is up.</li>
+    </ul>
+  </div>
+
+  <button onclick="startExam()">Start Exam</button>
+
+</div>
+
+<footer>All Rights Reserved</footer>
+
+<script>
+// =======================================
+// READ DATA FROM URL
+// =======================================
+var params = new URLSearchParams(window.location.search);
+
+var sName = params.get("name") || "";
+var sClass = params.get("class") || "";
+var sPhone = params.get("phone") || "";
+var sImg = params.get("img") || "";
+
+// Fill text
+document.getElementById("studName").innerText = sName;
+document.getElementById("studClass").innerText = sClass;
+document.getElementById("studPhone").innerText = sPhone;
+
+// =======================================
+// START WEBCAM (Mock Anti-Cheat)
+// =======================================
+navigator.mediaDevices.getUserMedia({ video: true })
+  .then(function(stream) {
+    document.getElementById("cam").srcObject = stream;
+  })
+  .catch(function() {
+    alert("Camera access denied! You must enable your camera to continue.");
+  });
+
+// =======================================
+// PROCEED TO EXAM PAGE
+// =======================================
+function startExam() {
+  var next =
+    "exam.html?name=" + encodeURIComponent(sName) +
+    "&class=" + encodeURIComponent(sClass) +
+    "&phone=" + encodeURIComponent(sPhone) +
+    "&img=" + encodeURIComponent(sImg);
+
+  window.location.href = next;
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAC Revision Exam</title>
+
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    background: #fafafa;
+    font-family: Arial;
+}
+
+header {
+    background: #6a0000;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    font-size: 23px;
+    font-weight: bold;
+}
+
+#tabs { text-align: center; margin-top: 12px; }
+.tabBtn {
+    background: #6a0000;
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin: 3px;
+    font-size: 15px;
+}
+.tabBtn.active { background: #ff9500; }
+
+#timer {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 8px;
+    color: #6a0000;
+}
+
+#videoWrapper { text-align: center; margin-top: 10px; }
+#cam {
+    width: 250px;
+    height: 200px;
+    border-radius: 10px;
+    border: 3px solid #6a0000;
+}
+
+#questionBox {
+    background: white;
+    padding: 15px;
+    margin: 20px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+}
+
+.option {
+    padding: 10px;
+    margin-top: 8px;
+    background: #e7e7e7;
+    border-radius: 8px;
+}
+.option:hover { background: #d4d4d4; cursor: pointer; }
+
+.selectedOpt { background: #6a0000; color: white; }
+
+#buttons { text-align: center; margin-top: 20px; }
+button {
+    background: #6a0000;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    margin: 4px;
+    font-size: 15px;
+}
+</style>
+</head>
+<body>
+
+<header>CAC REVISION EXAM</header>
+
+<!-- ================= SUBJECT TABS ================= -->
+<div id="tabs">
+    <button class="tabBtn active" onclick="switchSubject('mathematics')">Mathematics</button>
+    <button class="tabBtn" onclick="switchSubject('basicscience')">Basic Science</button>
+    <button class="tabBtn" onclick="switchSubject('basictech')">Basic Technology</button>
+</div>
+
+<!-- ================= TIMER ================= -->
+<div id="timer">Loading...</div>
+
+<!-- ================= WEBCAM ================= -->
+<div id="videoWrapper">
+    <video id="cam" autoplay playsinline></video>
+</div>
+
+<!-- ================= QUESTIONS ================= -->
+<div id="questionBox">
+    <h3 id="qText">Loading...</h3>
+
+    <div id="A" class="option" onclick="choose('A')"></div>
+    <div id="B" class="option" onclick="choose('B')"></div>
+    <div id="C" class="option" onclick="choose('C')"></div>
+    <div id="D" class="option" onclick="choose('D')"></div>
+</div>
+
+<!-- ================= NAV BUTTONS ================= -->
+<div id="buttons">
+    <button onclick="prevQ()">Previous</button>
+    <button onclick="nextQ()">Next</button>
+    <button onclick="submitExam()">Submit</button>
+</div>
+
+
+<!-- ================= FIREBASE + ENGINE ================= -->
+<script type="module">
+/* ===================== FIREBASE ===================== */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, collection, addDoc } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCpndu7WVF91FypHqnslbhgJsWOSQsCocQ",
+    authDomain: "cacexam-cc040.firebaseapp.com",
+    projectId: "cacexam-cc040",
+    storageBucket: "cacexam-cc040.appspot.com",
+    messagingSenderId: "295980156642",
+    appId: "1:295980156642:web:febd8335d5dc37eb7bc0bb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* =============== GET STUDENT FROM URL =============== */
+const params = new URLSearchParams(location.search);
+const currentStudent = {
+    name: params.get("name"),
+    class: params.get("class"),
+    phone: params.get("phone")
+};
+
+/* ===================== QUESTION BANK ===================== */
+const questionBank = {
+    mathematics: [
+    { question:"Simplify 3x + 5x", optA:"8x", optB:"2x", optC:"15", optD:"5", correct:"A" },
+    { question:"Solve: 2(a+3)=10", optA:"2", optB:"3", optC:"4", optD:"5", correct:"A" },
+    { question:"Expand: 5(x+2)", optA:"5x+10", optB:"5x+2", optC:"10x", optD:"2x+5", correct:"A" },
+    { question:"Find x: x - 7 = 3", optA:"10", optB:"4", optC:"-4", optD:"1", correct:"A" },
+    { question:"Solve: 4y = 20", optA:"5", optB:"10", optC:"2", optD:"4", correct:"A" },
+    { question:"Plot 3 on number line", optA:"Right of 0", optB:"Left of 0", optC:"Middle", optD:"Undefined", correct:"A" },
+    { question:"Which is smaller: -2 or 3?", optA:"-2", optB:"3", optC:"Equal", optD:"None", correct:"A" },
+    { question:"Value of -5 + 2", optA:"-3", optB:"3", optC:"7", optD:"2", correct:"A" },
+    { question:"Solve: 9 = x + 4", optA:"5", optB:"13", optC:"4", optD:"1", correct:"A" },
+    { question:"Find x: 3x=12", optA:"4", optB:"3", optC:"2", optD:"1", correct:"A" },
+    { question:"Simplify: 7a - 2a", optA:"5a", optB:"9a", optC:"2a", optD:"7a", correct:"A" },
+    { question:"Solve: x+10=15", optA:"5", optB:"25", optC:"10", optD:"15", correct:"A" },
+    { question:"Which is greater: -1 or -4?", optA:"-1", optB:"-4", optC:"Equal", optD:"None", correct:"A" },
+    { question:"Point 0 on number line is called?", optA:"Origin", optB:"Start", optC:"Middle", optD:"Zero", correct:"A" },
+    { question:"Simplify: 4(x-2)", optA:"4x-8", optB:"4x-2", optC:"2x-4", optD:"4x+8", correct:"A" },
+    { question:"Solve: x/3 = 2", optA:"6", optB:"3", optC:"2", optD:"1", correct:"A" },
+    { question:"Which comes first: -10 or -2?", optA:"-10", optB:"-2", optC:"Equal", optD:"None", correct:"A" },
+    { question:"Value of 2x when x=5", optA:"10", optB:"7", optC:"25", optD:"5", correct:"A" },
+    { question:"Solve: 15 - x = 5", optA:"10", optB:"20", optC:"5", optD:"15", correct:"A" },
+    { question:"Simplify: x + x + x", optA:"3x", optB:"x", optC:"x²", optD:"3", correct:"A" }
+],
+
+basicscience: [
+    { question:"Work is done when?", optA:"A force moves an object", optB:"Object stands still", optC:"Heat is added", optD:"Light shines", correct:"A" },
+    { question:"Unit of power is?", optA:"Watt", optB:"Joule", optC:"Newton", optD:"Meter", correct:"A" },
+    { question:"Energy is the ability to?", optA:"Do work", optB:"Sleep", optC:"Walk", optD:"Eat", correct:"A" },
+    { question:"Mixtures can be separated by?", optA:"Filtration", optB:"Melting", optC:"Burning", optD:"Freezing", correct:"A" },
+    { question:"Compound is formed by?", optA:"Chemical combination", optB:"Physical mixing", optC:"Filtering", optD:"Cooling", correct:"A" },
+    { question:"Power = work / ?", optA:"Time", optB:"Speed", optC:"Distance", optD:"Energy", correct:"A" },
+    { question:"Kinetic energy is energy of?", optA:"Motion", optB:"Rest", optC:"Heat", optD:"Light", correct:"A" },
+    { question:"Force × distance = ?", optA:"Work", optB:"Energy", optC:"Power", optD:"Mass", correct:"A" },
+    { question:"Salt + water makes?", optA:"Mixture", optB:"Compound", optC:"Element", optD:"Metal", correct:"A" },
+    { question:"Water is a compound because?", optA:"It has two elements", optB:"It is liquid", optC:"It is clear", optD:"It is common", correct:"A" },
+    { question:"Work unit is?", optA:"Joule", optB:"Watt", optC:"Newton", optD:"Coulomb", correct:"A" },
+    { question:"Sugar solution is?", optA:"Mixture", optB:"Compound", optC:"Element", optD:"Solid", correct:"A" },
+    { question:"Energy cannot be?", optA:"Destroyed", optB:"Used", optC:"Stored", optD:"Changed", correct:"A" },
+    { question:"Mechanical energy = kinetic + ?", optA:"Potential", optB:"Heat", optC:"Light", optD:"Sound", correct:"A" },
+    { question:"Mixture is separated by?", optA:"Physical means", optB:"Chemical means", optC:"Burning", optD:"Electricity", correct:"A" },
+    { question:"Electric energy converts to?", optA:"Light", optB:"Food", optC:"Metal", optD:"Wind", correct:"A" },
+    { question:"Power unit symbol is?", optA:"W", optB:"J", optC:"N", optD:"M", correct:"A" },
+    { question:"Compound example?", optA:"Water", optB:"Sand", optC:"Salt water", optD:"Smoke", correct:"A" },
+    { question:"Mixture example?", optA:"Air", optB:"Water", optC:"Salt", optD:"Iron", correct:"A" },
+    { question:"Potential energy is energy of?", optA:"Position", optB:"Running", optC:"Heat", optD:"Wind", correct:"A" }
+],
+
+basictech: [
+    { question:"Wood comes from?", optA:"Trees", optB:"Sand", optC:"Oil", optD:"Plastic", correct:"A" },
+    { question:"Rubber comes from?", optA:"Latex", optB:"Water", optC:"Iron", optD:"Clay", correct:"A" },
+    { question:"Plastic is made from?", optA:"Petroleum", optB:"Tree", optC:"Clay", optD:"Glass", correct:"A" },
+    { question:"Softwood example?", optA:"Pine", optB:"Iroko", optC:"Mahogany", optD:"Ebony", correct:"A" },
+    { question:"Hardwood example?", optA:"Iroko", optB:"Pine", optC:"Palm", optD:"Cedar", correct:"A" },
+    { question:"Rubber is used for?", optA:"Tyres", optB:"Cloth", optC:"Stone", optD:"Glass", correct:"A" },
+    { question:"Plastic property?", optA:"Lightweight", optB:"Very heavy", optC:"Rusts", optD:"Breaks easily", correct:"A" },
+    { question:"Wood for furniture?", optA:"Mahogany", optB:"Rubber", optC:"Plastic", optD:"Sand", correct:"A" },
+    { question:"Synthetic rubber is?", optA:"Man-made", optB:"Natural", optC:"Plant", optD:"Food", correct:"A" },
+    { question:"Plastic melts when?", optA:"Heated", optB:"Frozen", optC:"Left alone", optD:"Wet", correct:"A" },
+    { question:"Rubber can?", optA:"Stretch", optB:"Break easily", optC:"Rust", optD:"Burn slowly", correct:"A" },
+    { question:"Wood finishing for beauty?", optA:"Varnish", optB:"Water", optC:"Soil", optD:"Paint", correct:"A" },
+    { question:"Plastic recycling means?", optA:"Reusing plastic", optB:"Burning", optC:"Dumping", optD:"Wasting", correct:"A" },
+    { question:"Wood is?", optA:"Non-metal", optB:"Metal", optC:"Gas", optD:"Plastic", correct:"A" },
+    { question:"Rubber is?", optA:"Elastic", optB:"Rigid", optC:"Rusty", optD:"Metal", correct:"A" },
+    { question:"Plastic is?", optA:"Waterproof", optB:"Soil", optC:"Metal", optD:"Wood", correct:"A" },
+    { question:"Hardwood is?", optA:"Strong", optB:"Weak", optC:"Soft", optD:"Breaks", correct:"A" },
+    { question:"Rubber used in?", optA:"Shoe soles", optB:"Glass", optC:"Sand", optD:"Food", correct:"A" },
+    { question:"Wood can?", optA:"Rot", optB:"Never rot", optC:"Be metal", optD:"Be rubber", correct:"A" },
+    { question:"Plastic advantage?", optA:"Cheap", optB:"Expensive", optC:"Heavy", optD:"Rusty", correct:"A" }
+]
+};
+
+/* ==== (YOU WILL PASTE YOUR 20+20+20 QUESTIONS HERE) ==== */
+
+
+/* ================= SUBJECT ENGINE ================= */
+let currentSubject = "mathematics";
+
+let pointer = {
+    mathematics: 0,
+    basicscience: 0,
+    basictech: 0
+};
+
+let answers = {
+    mathematics: {},
+    basicscience: {},
+    basictech: {}
+};
+
+window.switchSubject = function(sub) {
+    currentSubject = sub;
+
+    document.querySelectorAll(".tabBtn").forEach(btn => btn.classList.remove("active"));
+    event.target.classList.add("active");
+
+    loadQuestion();
+};
+
+
+/* ================= LOAD QUESTION ================= */
+function loadQuestion() {
+    const list = questionBank[currentSubject];
+    const index = pointer[currentSubject];
+    const q = list[index];
+
+    document.getElementById("qText").innerText = q.question;
+
+    document.getElementById("A").innerText = q.optA;
+    document.getElementById("B").innerText = q.optB;
+    document.getElementById("C").innerText = q.optC;
+    document.getElementById("D").innerText = q.optD;
+
+    document.querySelectorAll(".option").forEach(o => o.classList.remove("selectedOpt"));
+    if (answers[currentSubject][index]) {
+        document.getElementById(answers[currentSubject][index]).classList.add("selectedOpt");
+    }
+}
+
+/* ================= CHOOSE OPTION ================= */
+window.choose = function(opt) {
+    answers[currentSubject][pointer[currentSubject]] = opt;
+
+    document.querySelectorAll(".option").forEach(o => o.classList.remove("selectedOpt"));
+    document.getElementById(opt).classList.add("selectedOpt");
+};
+
+/* ================= NAVIGATION ================= */
+window.nextQ = function() {
+    const list = questionBank[currentSubject];
+    if (pointer[currentSubject] < list.length - 1) {
+        pointer[currentSubject]++;
+        loadQuestion();
+    }
+};
+
+window.prevQ = function() {
+    if (pointer[currentSubject] > 0) {
+        pointer[currentSubject]--;
+        loadQuestion();
+    }
+};
+
+/* ================= TIMER ================= */
+let timeLeft = 600; // 10 minutes
+
+setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60);
+    const s = String(timeLeft % 60).padStart(2, "0");
+
+    document.getElementById("timer").innerHTML = `${m}:${s}`;
+
+    if (timeLeft <= 0) submitExam();
+}, 1000);
+
+/* ================= WEBCAM ================= */
+let video = document.getElementById("cam");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+    .then(s => video.srcObject = s)
+    .catch(() => { alert("Camera required!"); submitExam(); });
+
+/* ================= SUBMIT ================= */
+window.submitExam = async function() {
+    let score = 0;
+
+    Object.keys(questionBank).forEach(subject => {
+        questionBank[subject].forEach((q, i) => {
+            if (answers[subject][i] === q.correct) score++;
+        });
+    });
+
+    // Save to Firestore
+    try {
+        await addDoc(collection(db, "ExamResults"), {
+            ...currentStudent,
+            score,
+            total: 60,
+            answers,
+            submittedAt: new Date().toISOString()
+        });
+    } catch (e) {
+        alert("Error saving results: " + e.message);
+    }
+
+    // Move to final.html
+    window.location.href = "final.html?name=" + encodeURIComponent(currentStudent.name)
+        + "&score=" + score;
+};
+
+loadQuestion();
+</script>
+
+</body>
+</html>
