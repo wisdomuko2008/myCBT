@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAC Admin Panel</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0; padding: 0;
+}
+
+header {
+    background: #6a0000;
+    padding: 18px;
+    color: white;
+    text-align: center;
+    font-size: 23px;
+    font-weight: bold;
+}
+
+table {
+    width: 95%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+
+th {
+    background: #6a0000;
+    color: white;
+}
+
+textarea {
+    width: 95%;
+    height: 60px;
+    margin-bottom: 5px;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+button {
+    background: #6a0000;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+button:hover { background: #a30000; }
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 30px;
+    color: gray;
+}
+</style>
+</head>
+
+<body>
+
+<header>CAC REVISION EXAM – ADMIN PANEL</header>
+
+<h2 style="text-align:center; margin-top:25px;">All Students Results</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Phone</th>
+            <th>Basic Science</th>
+            <th>Basic Tech</th>
+            <th>Mathematics</th>
+            <th>Comment + PDF</th>
+        </tr>
+    </thead>
+    <tbody id="resultBody"></tbody>
+</table>
+
+<div class="footer">© 2025 CAC Revision System — All Rights Reserved</div>
+
+
+<!-- JS + FIREBASE -->
+<script type="module">
+import { initializeApp } 
+    from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
+import { 
+    getFirestore, collection, getDocs 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+import "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
+
+
+/* ----------------------------
+      FIREBASE CONFIG
+---------------------------- */
+const firebaseConfig = {
+    apiKey: "AIzaSyCpndu7WVF91FypHqnslbhgJsWOSQsCocQ",
+    authDomain: "cacexam-cc040.firebaseapp.com",
+    projectId: "cacexam-cc040",
+    storageBucket: "cacexam-cc040.appspot.com",
+    messagingSenderId: "295980156642",
+    appId: "1:295980156642:web:febd8335d5dc37eb7bc0bb"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+
+/* ----------------------------
+   LOAD ALL RESULTS (MERGED)
+---------------------------- */
+async function loadResults() {
+    const snap = await getDocs(collection(db, "ExamResults"));
+
+    const resultBody = document.getElementById("resultBody");
+    const studentsMap = {};
+
+    snap.forEach(docSnap => {
+        const d = docSnap.data();
+        const phone = d.phone;
+
+        if (!studentsMap[phone]) {
+            studentsMap[phone] = {
+                name: d.name,
+                class: d.class,
+                phone: d.phone,
+                basicscience: "-",
+                basictech: "-",
+                mathematics: "-",
+            };
+        }
+
+        // Set scores to correct subject
+        studentsMap[phone][d.subject] = `${d.score}/${d.total}`;
+    });
+
+    // Build table rows
+    for (const phone in studentsMap) {
+        const s = studentsMap[phone];
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${s.name}</td>
+            <td>${s.class}</td>
+            <td>${s.phone}</td>
+
+            <td>${s.basicscience}</td>
+            <td>${s.basictech}</td>
+            <td>${s.mathematics}</td>
+
+            <td>
+                <textarea class="cmt" placeholder="Teacher's comment..."></textarea>
+                <button onclick="downloadPDF('${phone}', this)">PDF</button>
+            </td>
+        `;
+        resultBody.appendChild(tr);
+    }
+}
+
+loadResults();
+
+
+/* ----------------------------
+   DOWNLOAD PDF FOR ONE STUDENT
+---------------------------- */
+window.downloadPDF = async function(phone, btn) {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF("p","pt","a4");
+
+    const comment = btn.parentElement.querySelector(".cmt").value || "No comment added.";
+
+    // Fetch again but only this student's data
+    const snap = await getDocs(collection(db, "ExamResults"));
+
+    let student = {};
+    let math = "-";
+    let sci = "-";
+    let tech = "-";
+
+    snap.forEach(docSnap => {
+        const d = docSnap.data();
+        if (d.phone === phone) {
+            student = d;
+            if (d.subject === "mathematics") math = `${d.score}/${d.total}`;
+            if (d.subject === "basicscience") sci = `${d.score}/${d.total}`;
+            if (d.subject === "basictech") tech = `${d.score}/${d.total}`;
+        }
+    });
+
+    /* ----------------------------
+       PDF CONTENT
+    ---------------------------- */
+
+    pdf.setFontSize(22);
+    pdf.text("JSS2 REVISION TEST", 150, 40);
+
+    pdf.setFontSize(14);
+    pdf.text(`Student Name: ${student.name}`, 40, 90);
+    pdf.text(`Class: ${student.class}`, 40, 110);
+    pdf.text(`Phone: ${student.phone}`, 40, 130);
+
+    pdf.setFontSize(18);
+    pdf.text("Scores Summary", 40, 170);
+
+    // Table headers
+    pdf.setFontSize(12);
+    pdf.rect(40, 190, 520, 25);
+    pdf.text("Subject", 50, 206);
+    pdf.text("Score", 300, 206);
+
+    // Mathematics
+    pdf.rect(40, 215, 520, 25);
+    pdf.text("Mathematics", 50, 231);
+    pdf.text(math, 300, 231);
+
+    // Basic Science
+    pdf.rect(40, 240, 520, 25);
+    pdf.text("Basic Science", 50, 256);
+    pdf.text(sci, 300, 256);
+
+    // Basic Technology
+    pdf.rect(40, 265, 520, 25);
+    pdf.text("Basic Technology", 50, 281);
+    pdf.text(tech, 300, 281);
+
+    // Comment
+    pdf.setFontSize(16);
+    pdf.text("Teacher's Comment:", 40, 330);
+    pdf.setFontSize(12);
+    pdf.text(comment, 40, 350, { maxWidth: 520 });
+
+    // Signature
+    pdf.text("__________________________", 40, 420);
+    pdf.text("Teacher's Signature", 40, 440);
+
+    pdf.save(`${student.name}_FullResult.pdf`);
+};
+</script>
+
+</body>
+</html>
